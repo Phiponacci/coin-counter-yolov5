@@ -10,3 +10,12 @@
 # How to use the API:
 
 Send a post request to <api_base_url>/count with the "image": \<image>
+
+
+# Results
+## PR curve
+![PR curve](./images/PR_curve.png)
+
+
+## A sample image
+![PR curve](./images/test.jpg)
