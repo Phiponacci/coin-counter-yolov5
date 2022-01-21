@@ -17,10 +17,23 @@ from utils.general import (check_img_size, non_max_suppression)
 from utils.torch_utils import select_device
 
 classes = [2, 1, 50, 20, 10, 5]
+IMG_SIZE = 640
+
+
+def resize_box(box, size):
+    h, w, _ = size
+    x1, y1, x2, y2, _, _ = box
+    return [
+        x1 * w / IMG_SIZE,
+        y1 * h / IMG_SIZE,
+        x2 * w / IMG_SIZE,
+        y2 * h / IMG_SIZE
+    ]
 
 
 @torch.no_grad()
-def run(image,
+def run(
+        image,
         weights=ROOT / 'coin_detector.pt',  # model.pt path(s)
         data=ROOT / 'data/coin.yaml',  # dataset.yaml path
         imgsz=(640, 640),  # inference size (height, width)
@@ -28,14 +41,15 @@ def run(image,
         iou_thres=0.45,  # NMS IOU threshold
         max_det=25,  # maximum detections per image
         device='',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
-        ):
+):
     # Load model
     device = select_device(device)
     model = DetectMultiBackend(weights=weights, device=device, data=data)
     imgsz = check_img_size(imgsz, s=model.stride)  # check image size
     # Run inference
     model.warmup(imgsz=(1, 3, *imgsz))  # warmup
-    img = letterbox(image, stride=model.stride)[0]
+    img = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
+    img = letterbox(img, stride=model.stride)[0]
     # Convert
     im = img.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
     im = np.ascontiguousarray(im)
@@ -49,10 +63,11 @@ def run(image,
     preds = []
     for det in pred:
         try:
-            box = det[0].tolist()
-            box[-1] = classes[int(box[-1])]
-            preds.append(box)
-        except Exception:
-            pass
+            for d in det:
+                box = d.tolist()
+                box[-1] = classes[int(box[-1])]
+                box[0:-2] = [int(el) for el in resize_box(box, image.shape)]
+                preds.append(box)
+        except Exception as e:
+            print(e)
     return preds
-
