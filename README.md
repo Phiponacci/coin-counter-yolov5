@@ -1,6 +1,6 @@
 # Coin counter api with YOLOv5
 
-This is a concept project, demonstrate how to use yolov5 detector to count coins in an image.
+This is a proof-of-concept project, demonstrate how to use yolov5 detector to count coins in an image.
 
 ## Installation:
 
